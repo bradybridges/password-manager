@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 
+from frames.vault import Vault
 
-class LoginFrame(ttk.Frame):
-    def __init__(self, container):
+
+class Login(ttk.Frame):
+    def __init__(self, container, controller):
         super().__init__(container)
-        self.pack(fill="both", expand=True)
+        self.controller = controller
 
         # Password label and input
         def validate_password(var, index, mode):
@@ -16,17 +18,22 @@ class LoginFrame(ttk.Frame):
             else:
                 self.button.state(["disabled"])
 
-        self.button = ttk.Button(self, text="Unlock", command=self.handle_click)
-        self.button.state(["disabled"])
-
+        # Label
         self.password_label = ttk.Label(self, text="Master Password")
         self.password_label.pack(pady=2)
+
+        # Entry observer
         self.password_text = tk.StringVar()
         self.password_text.trace_add("write", validate_password)
+
+        # Password entry
         self.password_entry = ttk.Entry(self, show="*", textvariable=self.password_text)
         self.password_entry.pack(pady=5, padx=5)
 
+        # Button
+        self.button = ttk.Button(self, text="Unlock", command=self.handle_click)
+        self.button.state(["disabled"])
         self.button.pack(ipadx=5, ipady=5)
 
     def handle_click(self):
-        print(f"Password: {self.password_text.get()}")
+        self.controller.show_frame(Vault)
