@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from utils.window import get_window_info
+
 
 class Vault(ttk.Frame):
     def __init__(self, container, controller):
@@ -189,7 +191,12 @@ class Vault(ttk.Frame):
     # --- shared add/edit dialog ---
 
     def _open_credential_dialog(self, existing=None):
+        dialog_width = 400
+        dialog_height = 250
         dialog = tk.Toplevel(self)
+        dialog_info = get_window_info(dialog, dialog_width, dialog_height)
+        dialog_geometry = f"{dialog_width}x{dialog_height}+{dialog_info["window_x_center"]}+{dialog_info["window_y_center"]}"
+        dialog.geometry(dialog_geometry)
         dialog.title("Edit Entry" if existing else "Add Entry")
         dialog.resizable(False, False)
         dialog.grab_set()
