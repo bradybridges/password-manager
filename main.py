@@ -36,6 +36,9 @@ class App(tk.Tk):
         # Menubar
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(
+            label="New Vault", command=lambda: self.show_frame("CreateVault")
+        )
         file_menu.add_command(label="Import Vault", command=self.import_vault)
         file_menu.add_command(label="Export Vault", command=self.export_vault)
         file_menu.add_separator()
