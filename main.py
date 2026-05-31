@@ -5,25 +5,18 @@ from frames.create_vault import CreateVault
 from frames.login import Login
 from frames.vault import Vault
 from utils.vault_manager import VaultCorruptError, VaultManager
+from utils.window import get_window_info
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        # Screen dimensions
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-
         # Window dimensions
         window_width = 600
         window_height = 400
-        window_x_position = int((screen_width / 2) - (window_width / 2))
-        window_y_position = int((screen_height / 2) - (window_height / 2))
-
-        window_geometry = (
-            f"{window_width}x{window_height}+{window_x_position}+{window_y_position}"
-        )
+        window_info = get_window_info(self, window_width, window_height)
+        window_geometry = f"{window_width}x{window_height}+{window_info["window_x_center"]}+{window_info["window_y_center"]}"
 
         # Window setup
         self.title("Password Manager")
@@ -54,7 +47,11 @@ class App(tk.Tk):
 
         # Frames setup
         self.frames = {}
-        for name, FrameClass in (("Login", Login), ("CreateVault", CreateVault), ("Vault", Vault)):
+        for name, FrameClass in (
+            ("Login", Login),
+            ("CreateVault", CreateVault),
+            ("Vault", Vault),
+        ):
             frame = FrameClass(self.container, self)
             self.frames[name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -78,11 +75,15 @@ class App(tk.Tk):
             return
         try:
             imported_name = self.vault_manager.import_vault(path)
-            messagebox.showinfo("Vault Imported", f'Vault "{imported_name}" imported successfully.')
+            messagebox.showinfo(
+                "Vault Imported", f'Vault "{imported_name}" imported successfully.'
+            )
             if self.frames["Login"].winfo_ismapped() or True:
                 self.show_frame("Login")
         except VaultCorruptError:
-            messagebox.showerror("Import Failed", "The selected file is not a valid vault.")
+            messagebox.showerror(
+                "Import Failed", "The selected file is not a valid vault."
+            )
 
     def export_vault(self):
         vault_frame = self.frames["Vault"]
