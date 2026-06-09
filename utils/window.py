@@ -16,7 +16,7 @@ def get_window_info(
 
     return {
         "screen_width": screen_width,
-        "screen_height": screen_width,
+        "screen_height": screen_height,
         "screen_x_center": screen_x_center,
         "screen_y_center": screen_y_center,
         "window_x_center": window_x_center,
