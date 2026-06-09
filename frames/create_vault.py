@@ -1,6 +1,20 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from utils.vault_manager import VaultAlreadyExistsError
+
+INVALID_NAME_CHARS = set('/\\:*?"<>|')
+
+
+def _validate_vault_name(name: str) -> str:
+    """Return an error string, or empty string if name is valid."""
+    if not name.strip():
+        return "Name cannot be blank."
+    if any(c in INVALID_NAME_CHARS for c in name):
+        bad = ", ".join(sorted(INVALID_NAME_CHARS))
+        return f"Name cannot contain: {bad}"
+    return ""
+
 
 class CreateVault(ttk.Frame):
     def __init__(self, container, controller):
@@ -11,7 +25,12 @@ class CreateVault(ttk.Frame):
             name = self.name_text.get()
             password = self.password_text.get()
             confirm = self.confirm_text.get()
-            if name and password and password == confirm:
+            name_error = _validate_vault_name(name)
+            if name_error:
+                self.name_error_label.config(text=name_error)
+            else:
+                self.name_error_label.config(text="")
+            if name and not name_error and password and password == confirm:
                 self.create_button.state(["!disabled"])
             else:
                 self.create_button.state(["disabled"])
@@ -21,7 +40,9 @@ class CreateVault(ttk.Frame):
         ttk.Label(self, text="Vault Name").pack()
         self.name_text = tk.StringVar()
         self.name_text.trace_add("write", validate)
-        ttk.Entry(self, textvariable=self.name_text).pack(pady=2, padx=5)
+        ttk.Entry(self, textvariable=self.name_text).pack(pady=(2, 0), padx=5)
+        self.name_error_label = ttk.Label(self, text="", foreground="red")
+        self.name_error_label.pack()
 
         ttk.Label(self, text="Password").pack(pady=(8, 0))
         self.password_text = tk.StringVar()
@@ -49,7 +70,9 @@ class CreateVault(ttk.Frame):
             self.controller.vault_manager.create(name, password)
             self._reset()
             self.controller.show_frame("Login")
-        except Exception as e:
+        except VaultAlreadyExistsError:
+            messagebox.showerror("Vault Already Exists", f'A vault named "{name}" already exists. Choose a different name.')
+        except OSError as e:
             messagebox.showerror("Error", f"Could not create vault: {e}")
 
     def handle_back(self):
@@ -60,3 +83,4 @@ class CreateVault(ttk.Frame):
         self.name_text.set("")
         self.password_text.set("")
         self.confirm_text.set("")
+        self.name_error_label.config(text="")
