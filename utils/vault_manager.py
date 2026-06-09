@@ -35,6 +35,9 @@ class VaultError(Exception):
 class VaultNotFoundError(VaultError):
     pass
 
+class VaultAlreadyExistsError(VaultError):
+    pass
+
 class VaultWrongPasswordError(VaultError):
     pass
 
@@ -47,6 +50,8 @@ class VaultManager:
         VAULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     def create(self, name: str, password: str) -> None:
+        if self._vault_path(name).exists():
+            raise VaultAlreadyExistsError(name)
         salt = os.urandom(SALT_BYTES)
         fernet = self._make_fernet(password, salt)
         self._write(self._vault_path(name), salt, ITERATIONS, self._encrypt(fernet, []))
@@ -150,4 +155,6 @@ class VaultManager:
         }
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload))
+        tmp.chmod(0o600)
         os.replace(tmp, path)
+        path.chmod(0o600)
