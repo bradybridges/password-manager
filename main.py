@@ -78,8 +78,7 @@ class App(tk.Tk):
             messagebox.showinfo(
                 "Vault Imported", f'Vault "{imported_name}" imported successfully.'
             )
-            if self.frames["Login"].winfo_ismapped() or True:
-                self.show_frame("Login")
+            self.show_frame("Login")
         except VaultCorruptError:
             messagebox.showerror(
                 "Import Failed", "The selected file is not a valid vault."
