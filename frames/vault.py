@@ -1,7 +1,12 @@
 import tkinter as tk
+from pathlib import Path
 from tkinter import messagebox, ttk
 
+from PIL import Image, ImageTk
+
 from utils.window import get_window_info
+
+_ASSETS = Path(__file__).parent.parent / "assets"
 
 
 class Vault(ttk.Frame):
@@ -14,7 +19,26 @@ class Vault(ttk.Frame):
         self._password_visible = False
         self._selected_index = None
 
+        self._load_images()
         self._build_ui()
+
+    def _load_images(self):
+        self._img_visible = self._load_icon("visible.png")
+        self._img_hide = self._load_icon("hide.png")
+        self._img_copy = self._load_icon("copy.png")
+
+    @staticmethod
+    def _load_icon(filename, size=16):
+        img = Image.open(_ASSETS / filename).convert("RGBA")
+        bbox = img.getbbox()
+        if bbox:
+            img = img.crop(bbox)
+        # Square-pad with transparency so all icons scale uniformly
+        dim = max(img.size)
+        padded = Image.new("RGBA", (dim, dim), (0, 0, 0, 0))
+        padded.paste(img, ((dim - img.width) // 2, (dim - img.height) // 2))
+        padded = padded.resize((size, size), Image.LANCZOS)
+        return ImageTk.PhotoImage(padded)
 
     def load(self, credentials, vault_name, password):
         self.credentials = credentials
@@ -83,16 +107,17 @@ class Vault(ttk.Frame):
             ttk.Label(self.detail_frame, text=f"{field}:", anchor="e", width=10).grid(
                 row=i + 1, column=0, sticky="e", pady=3
             )
-            val_label = ttk.Label(self.detail_frame, text="", anchor="w", wraplength=220)
-            val_label.grid(row=i + 1, column=1, sticky="w", padx=(4, 0))
+            wrap = 280 if field == "Notes" else 0
+            val_label = ttk.Label(self.detail_frame, text="", anchor="w", wraplength=wrap)
+            val_label.grid(row=i + 1, column=1, sticky="ew", padx=(4, 0))
             self.detail_values[field] = val_label
 
             if field == "Password":
                 btn_frame = ttk.Frame(self.detail_frame)
-                btn_frame.grid(row=i + 1, column=2, padx=(6, 0))
-                self.show_btn = ttk.Button(btn_frame, text="Show", width=5, command=self._toggle_password)
+                btn_frame.grid(row=i + 1, column=2, padx=(6, 0), sticky="w")
+                self.show_btn = ttk.Button(btn_frame, image=self._img_visible, command=self._toggle_password)
                 self.show_btn.pack(side="left")
-                ttk.Button(btn_frame, text="Copy", width=5, command=self._copy_password).pack(side="left", padx=(4, 0))
+                ttk.Button(btn_frame, image=self._img_copy, command=self._copy_password).pack(side="left", padx=(4, 0))
 
         for i in range(1, len(fields) + 1):
             self.detail_frame.grid_rowconfigure(i, weight=0)
@@ -126,7 +151,7 @@ class Vault(ttk.Frame):
         self.detail_values["Password"].config(text="•" * len(cred.get("password", "")))
         self.detail_values["URL"].config(text=cred.get("url", ""))
         self.detail_values["Notes"].config(text=cred.get("notes", ""))
-        self.show_btn.config(text="Show")
+        self.show_btn.config(image=self._img_visible)
         for label in self.detail_values.values():
             label.grid()
 
@@ -148,10 +173,10 @@ class Vault(ttk.Frame):
         self._password_visible = not self._password_visible
         if self._password_visible:
             self.detail_values["Password"].config(text=raw)
-            self.show_btn.config(text="Hide")
+            self.show_btn.config(image=self._img_hide)
         else:
             self.detail_values["Password"].config(text="•" * len(raw))
-            self.show_btn.config(text="Show")
+            self.show_btn.config(image=self._img_visible)
 
     def _copy_password(self):
         if self._selected_index is None:
